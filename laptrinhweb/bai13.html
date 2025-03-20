@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+  </head>
+  <style>
+    body {
+
+text-align: center;
+
+color: blue;
+    }
+    
+    h2{text-align: center;
+    }
+    table{
+      border: 1px solid;
+      border-collapse: collapse;
+      margin: 0 auto;
+      background-color: aqua;
+    }
+    td {
+  border: 1px solid #ddd; /* Viền mỏng 1px cho các ô */
+  
+}
+  </style>
+  <body>
+    <h2>Đăng ký du lịch</h2>
+    <table>
+      <tr>
+        <td>
+          <label for="hovaten">Họ và Tên</label>
+        </td>
+        <td>
+          <input type="text" id="hovaten" required />
+        </td>
+      </tr>
+      <tr>
+        <td>
+          <label for="diachi">Địa chỉ</label>
+        </td>
+        <td>
+          <input type="text" id="diachi" required />
+        </td>
+      </tr>
+      <tr>
+        <td>
+          <label for="dienthoai">Điện thoại</label>
+        </td>
+        <td><input type="tel" id="dienthoai" required /></td>
+      </tr>
+      <tr>
+        <td>
+          <label for="khach">Khách Việt Nam</label>
+          <td><input
+            type="checkbox"
+            id="khach"
+            name="hang"
+            value="khach"
+            checked></td>
+        </td>
+      </tr>
+      <tr>
+        <td>
+          <label for="chontour">Chọn tour</label>
+        </td>
+        <td>
+          <select id="chontour" name="chontour">
+            <optgroup label="Miền Bắc"></optgroup>
+            <option value="Hà Nội">Hà Nội</option>
+            <option value="Hải Phòng">Sinh Viên</option>
+
+            <option value="Bắc Ninh">Kỹ sư</option>
+
+            <optgroup label="Miền Trung"></optgroup>
+            <option value="Bình Định">Bình Định</option>
+            <option value="Phú Yên">Phú Yên</option>
+
+            <option value="Khánh Hòa">Khánh Hòa</option>
+          </select>
+        </td>
+      </tr>
+      <tr>
+        <td><label for="phuongtien">Phương Tiện</label></td>
+        <td>
+          <label for="maybay">Máy Bay</label>
+          <input type="radio" id="maybay" name="fly" value="maybay" checked />
+          <label for="oto">Xe ô tô</label>
+          <input type="radio" id="oto" name="fly" value="oto" checked />
+        </td>
+      </tr>
+      <tr>
+        <td colspan="2">
+          <fieldset>
+            <legend>Số lượn đoàn khách</legend>
+            <label for="nguoilon">Người lớn</label>
+            <input type="number" id="nguoilon">
+            <label for="treem">Trẻ em</label>
+            <input type="number" id="treem">
+            </fieldset>
+        </td>
+      </tr>
+      <tr>
+        <td><label for="ghichu">Ghi chú</label></td>
+        <td colspan="2">
+          <textarea rows="2" cols="30">
+          Có 2 trẻ em
+          Có 2 người lớn
+          </textarea>
+        </td>
+      </tr>
+      <tr>
+        <td colspan="2" align="center">
+          <button type="button" id="loginButton">Đồng ý</button>
+        </td>
+      </tr>
+      <tr>
+        <td colspan="2">
+          <div id="hienthi" style="text-align: center"></div>
+        </td>
+        <script>
+          document
+            .getElementById("loginButton")
+            .addEventListener("click", () => {
+              document.getElementById("hienthi").innerText =
+                "Bạn đã đăng ký thành công!";
+            });
+        </script>
+      </tr>
+    </table>
+  </body>
+</html>

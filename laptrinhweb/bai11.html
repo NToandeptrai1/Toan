@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+  </head>
+  <body>
+    <h1 style="text-align: center; color: red">Đăng nhập</h1>
+    <table
+      style="background-color: blue; color: black"
+      border="1"
+      align="center"
+    >
+      <tr>
+        <td><label for="youname">youname</label></td>
+        <td><input type="text" id="youname" required /></td>
+      </tr>
+      <tr>
+        <td><label for="matkhau">matkhau</label></td>
+        <td>
+          <input type="password" id="matkhau" required />
+        </td>
+      </tr>
+      <tr>
+        <td colspan="2" align="center">
+          <button type="button" id="loginButton">Đồng ý</button>
+        </td>
+      </tr>
+      <tr>
+        <td colspan="2">
+          <div id="hienthi" style="text-align: center"></div>
+          <script>
+            // Lấy các phần tử HTML
+            const loginButton = document.getElementById("loginButton");
+            const younameInput = document.getElementById("youname");
+            const hienthiDiv = document.getElementById("hienthi");
+
+            // Thêm sự kiện click cho nút "Đồng ý"
+            loginButton.addEventListener("click", () => {
+              // Lấy giá trị từ ô input "youname"
+              const youname = younameInput.value;
+
+              // Hiển thị giá trị trong div "hienthi"
+              hienthiDiv.innerText = "Mã người dùng " + youname;
+            });
+          </script>
+        </td>
+      </tr>
+    </table>
+  </body>
+</html>

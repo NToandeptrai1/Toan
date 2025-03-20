@@ -1,0 +1,71 @@
+body {
+  font-family: Arial, Helvetica, sans-serif;
+}
+.header {
+  width: 100%;
+  height: 50px;
+  background: url(banner.jpg) no-repeat center center;
+  background-size: cover;
+  display: flex;
+  justify-content: center;
+  align-content: center;
+  text-align: center;
+}
+.container {
+  display: flex;
+  padding: 0%;
+  margin: 0%;
+}
+.menu {
+  width: 30%;
+  background-color: aliceblue;
+  padding: 10px;
+  line-height: normal;
+}
+.menu a {
+  display: list-item;
+  list-style: circle;
+  padding: 5px;
+  text-decoration: none;
+  color: blue;
+}
+.content {
+  width: 80%;
+  padding: 10px;
+}
+.giadinh {
+  float: left;
+  width: 100px;
+  height: 100px;
+}
+.section {
+  display: block;
+  border: 1px solid #ccc;
+  padding: 10px;
+  margin: 10px;
+  line-height: 1.5;
+}
+.title {
+  background: navy;
+  color: white;
+  padding: 5px;
+}
+/* margin và padding: là thành phần quan trọng để kiểm soát khoảng cách trong bố cục
+* Marfin là khoảng cách bên ngoài phần tử, nằm ngoài đường viền(border). Nó kiếm soát khoảng cách giữa các phần tử và
+các phần tử xung quanh
+Ví trí: nằm ngoài phần tử, không ảnh hưởng đến kích thước nội tịa của phần tử(content+padding+border)
+margin có thể nhận giá trị âm, cho phép các phần tử chồng lấn lên nhau
+margin:10px => áp dụng cho 4 phía 
+margin: 10px 20px => áp dụng cho top/botton=10px left/right=20px
+margin: 10px 20px 30px=>top 10px, left/right=20px, botton=30
+margin: 10px 20px 30px 40px=> top right botton left 
+margin-top: điều chỉnh khoảng cách trên
+margin-right: điều chỉnh khoảng cáh phải
+margin-botton: điều chỉnh khoảng cách dưới
+margin-left: điều chỉnh khoảng cách bên trái
+padding: khoảng cách bên trong của 1 phần tử, tức là khoảng cách từ nội dung đến biên trong của phần tử đó
+(viền -border)
+padding là 1 phần của phần tử, nằm giữa nội dung và border
+padding ko nhận giá trị âm
+padding thường dùng để tạo khoảng trống bên trong phần tử, làm cho nội dung không bị sát viền
+ */

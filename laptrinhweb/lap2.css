@@ -1,0 +1,159 @@
+.body {
+  font-family: Arial, Helvetica, sans-serif;
+  width: 90%;
+}
+.modau {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: linear-gradient(to right, #d30000, #ff6600);
+  color: white;
+  padding: 20px;
+}
+.hinhtrai {
+  width: 77%;
+  padding-left: 50px;
+}
+.hinhtrai h2 {
+  font-size: 30px;
+  font-weight: bold;
+  margin-bottom: 10px;
+}
+.chung {
+  display: flex;
+  align-items: center;
+  background: white;
+  padding: 5px 15px;
+  width: 55%;
+  margin-bottom: 10px;
+}
+.top {
+  color: red;
+  font-size: 22px;
+  font-weight: bold;
+  margin-right: 10px;
+}
+.center {
+  color: red;
+  font-size: 35px;
+  font-weight: bold;
+}
+.buttom {
+  background-color: blue;
+  color: whitesmoke;
+  font-weight: bold;
+  padding: 5px 15px;
+  width: 9%;
+  margin-top: 15px;
+  margin-left: 20%;
+}
+.hinhphai {
+  padding-right: 50px;
+  width: 45%;
+}
+.hinhphai img {
+  width: 90%;
+}
+.menu {
+  background-color: black;
+  color: white;
+  padding: 10px;
+}
+.dieuhuong {
+  color: white;
+  padding-left: 10%;
+  display: flex;
+  gap: 10%;
+}
+.container {
+  display: flex;
+  justify-content: space-between;
+  background-color: antiquewhite;
+}
+.noidungbenle {
+  display: flex;
+  background-color: aliceblue;
+  width: 300px;
+  margin: 5px;
+  background-color: #f4f4f4;
+  box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.1);
+}
+.tieude {
+  background-color: rgba(0, 0, 255, 0.459);
+  box-shadow: 0px 0px 10 px rgb(12, 9, 9);
+  margin: 10px;
+  padding: 1px;
+}
+.noidung {
+  flex: 1;
+  padding: 5px;
+  display: flex;
+  flex-direction: column;
+}
+.giua img {
+  width: 100%;
+  height: 200px;
+}
+.main {
+  background-color: rgb(127, 129, 255);
+  color: white;
+}
+.khung {
+  display: flex;
+  justify-content: space-around;
+  flex-wrap: wrap;
+  flex: 1;
+}
+
+.anh {
+  background-color: aliceblue;
+  color: aqua;
+  padding: 50px;
+  margin: 20px;
+  text-align: center;
+}
+.khung :hover {
+  background-color: rgb(209, 190, 157);
+  transform: scale(1.1);
+}
+.tien {
+  color: red;
+  font-weight: bold;
+}
+
+.nut {
+  background-color: orange;
+  color: white;
+  border: none;
+  padding: 10px;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+.nut:hover {
+  background-color: rgb(21, 255, 0);
+}
+.cuoitrang {
+  background-color: white;
+  color: blue;
+  font-weight: bold;
+  padding: 20px;
+  margin-top: 30px;
+  display: flex;
+  justify-content: space-around;
+}
+.het {
+  text-align: center;
+  background-color: rgba(0, 0, 255, 0.459);
+  color: white;
+  padding: 10px;
+}
+@media (max-width: 768px) .modau {
+  flex-direction: column;
+  text-align: center;
+}
+
+@media (max-width: 450px) .modau {
+  flex-direction: column;
+  text-align: center;
+}

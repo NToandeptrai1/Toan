@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="vi">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Quà tặng 8/3 cho cô giáo</title>
+    <style>
+      body {
+        font-family: "Arial", sans-serif;
+        margin: 0;
+        padding: 0;
+        background: linear-gradient(135deg, #ffdde1, #ee9ca7);
+        color: #333;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        min-height: 100vh;
+        text-align: center;
+      }
+      .container {
+        background: white;
+        padding: 40px;
+        border-radius: 15px;
+        box-shadow: 0px 10px 20px rgba(0, 0, 0, 0.2);
+        transition: transform 0.3s;
+        max-width: 600px;
+      }
+      .container:hover {
+        transform: scale(1.05);
+      }
+      .gift {
+        animation: fadeIn 1s ease-in-out;
+        display: none;
+      }
+      .gift p {
+        font-size: 20px;
+        font-weight: bold;
+        color: #d63384;
+        margin-top: 10px;
+      }
+      .gift video {
+        max-width: 50%;
+        border-radius: 15px;
+        box-shadow: 0px 5px 15px rgba(0, 0, 0, 0.2);
+        margin-bottom: 15px;
+      }
+      @keyframes fadeIn {
+        from {
+          opacity: 0;
+          transform: translateY(20px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+      .password-container {
+        margin-bottom: 20px;
+      }
+      .hidden {
+        display: none;
+      }
+      button {
+        background-color: #d63384;
+        color: white;
+        border: none;
+        padding: 12px 18px;
+        border-radius: 8px;
+        cursor: pointer;
+        font-size: 16px;
+        transition: background 0.3s;
+      }
+      button:hover {
+        background-color: #c2185b;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <div class="password-container" id="passwordContainer">
+        <label for="password">Nhập mật khẩu:</label>
+        <input type="password" id="password" />
+        <button onclick="checkPassword()">Mở quà</button>
+        <p id="error" style="color: red"></p>
+      </div>
+      <div class="gift" id="gift">
+        <p>Chúc mừng ngày 8/3, cô giáo kính yêu! 💖</p>
+        <p>
+          Như một bức tranh tươi sáng, cô đã vẽ lên những ước mơ, tri thức và
+          tình yêu thương trong lòng học trò. Chúc cô luôn rạng rỡ, hạnh phúc và
+          đầy ắp niềm vui! 🌸✨
+        </p>
+        <video controls>
+          <source src="6389731034586.mp4" type="video/mp4" />
+          Trình duyệt của bạn không hỗ trợ video.
+        </video>
+      </div>
+    </div>
+    <script>
+      function checkPassword() {
+        const password = document.getElementById("password").value;
+        if (password === "12b") {
+          document.getElementById("passwordContainer").classList.add("hidden");
+          document.getElementById("gift").style.display = "block";
+        } else {
+          document.getElementById("error").innerText =
+            "Mật khẩu không đúng, vui lòng thử lại!";
+        }
+      }
+    </script>
+  </body>
+</html>

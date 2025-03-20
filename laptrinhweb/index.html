@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="vi">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Danh sách sản phẩm</title>
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+      background-color: white;
+    }
+
+    .tatca {
+      width: 90%;
+      max-width: 1200px;
+      margin: 20px auto;
+      padding: 20px;
+      background-color: white;
+      box-shadow: 0 0 10px blue;
+    }
+
+    h1 {
+      text-align: center;
+      color: white;
+      margin-bottom: 20px;
+      background-color: red;
+    }
+
+    .khung {
+      display: flex;
+      justify-content: space-around;
+      flex-wrap: wrap;
+    }
+
+    .anh {
+      width: 30%;
+      margin-bottom: 20px;
+      padding: 15px;
+      border: 1px solid #ddd;
+      text-align: center;
+      transition: background-color 0.3s ease;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .anh:hover {
+      background-color: #f0f0f0;
+    }
+
+    .anh img {
+      max-width: 100%;
+      height: auto;
+      margin-bottom: 10px;
+      transition: transform 0.3s ease;
+    }
+
+    .anh img:hover {
+      transform: scale(1.1);
+    }
+
+    .tien {
+      font-weight: bold;
+      color: #e44d26;
+      margin-bottom: 10px;
+    }
+
+    .nutan {
+      background-color: #4caf50;
+      color: white;
+      padding: 10px 20px;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+    }
+
+    .nutan:hover {
+      background-color: #3e8e41;
+    }
+
+    @media (max-width: 768px) {
+      .anh {
+        width: 48%;
+      }
+    }
+
+    @media (max-width: 480px) {
+      .anh {
+        width: 100%;
+      }
+    }
+  </style>
+  <body>
+    <div class="tatca">
+      <h1>DANH SÁCH SẢN PHẨM</h1>
+      <div class="khung">
+        <div class="anh">
+          <img
+            src="Screenshot_10-3-2025_144947_.jpeg"
+            alt="Giày nữ cao gót Chanel REAL"
+          />
+          <h2>Giày nữ cao gót Chanel REAL</h2>
+          <p class="tien">4,885,000₫</p>
+          <button class="nutan">MUA</button>
+        </div>
+        <div class="anh">
+          <img
+            src="Screenshot_10-3-2025_144947_.jpeg"
+            alt="Giày nữ cao gót Chanel FAKE 1"
+          />
+          <h2>Giày nữ cao gót Chanel FAKE 1</h2>
+          <p class="tien">1.190.000&#8363;</p>
+          <button class="nutan">MUA</button>
+        </div>
+        <div class="anh">
+          <img
+            src="Screenshot_10-3-2025_144947_.jpeg"
+            alt="Giày nữ cao gót Chanel FAKE 2"
+          />
+          <h2>Giày nữ cao gót Chanel FAKE 2</h2>
+          <p class="tien">85,000₫</p>
+          <button class="nutan">MUA</button>
+        </div>
+      </div>
+    </div>
+  </body>
+</html>

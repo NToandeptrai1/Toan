@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+  </head>
+  <body>
+    <h2 style="text-align: center; color: red">
+      Phiếu đăng ký chương trình khuyến mãi
+    </h2>
+    <table
+      align="center"
+      border="1"
+      style="background-color: aqua; color: brown"
+    >
+      <tr>
+        <td><label for="hovaten">Họ và tên</label></td>
+        <td><input type="text" id="hovaten" required /></td>
+      </tr>
+      <tr>
+        <td>
+          <label for="diachi">Địa chỉ</label>
+        </td>
+        <td><input type="text" id="diachi" /></td>
+      </tr>
+      <tr>
+        <td><label for="dienthoai">Điện thoại</label></td>
+        <td><input type="tel" id="dienthoai" /></td>
+      </tr>
+      <tr>
+        <td><label for="phai">Phái</label></td>
+        <td>
+          <label for="nam">Nam</label>
+          <input type="radio" id="nam" name="gender" value="nam" checked />
+          <label for="nu">Nữ</label>
+          <input type="radio" id="nu" name="gender" value="nu" checked />
+        </td>
+      </tr>
+      <tr>
+        <td><label for="nghenghiep">Nghề nghiệp</label></td>
+        <td>
+          <select id="ngheNghiep" name="ngheNghiep">
+            <option value="bacsi">Bác sĩ</option>
+            <option value="sinhvien">Sinh Viên</option>
+
+            <option value="kySu">Kỹ sư</option>
+
+            <option value="giaoVien">Giáo viên</option>
+            <option value="khac">Khác</option>
+          </select>
+        </td>
+      </tr>
+      <tr>
+        <td><label for="chonsanpham">Chọn sản phẩm </label></td>
+        <td>
+          <select id="chonsanpham" size="4" multiple>
+            <option value="kemdanhrang" selected>Kem đánh răng</option>
+            <option value="botgiat" selected>Bột giặt</option>
+            \
+            <option value="suatam" selected>Sữa tắm</option>
+          </select>
+        </td>
+      </tr>
+      <tr>
+        <td><label for="songuoithamgia">Số người tham gia</label></td>
+        <td><input type="number" id="songuoithamgia" /></td>
+      </tr>
+      <tr>
+        <td colspan="2" align="center">
+          <button type="button" id="loginButton">Đồng ý</button>
+        </td>
+      </tr>
+
+      <tr>
+        <td colspan="2">
+          <div id="hienthi" style="text-align: center"></div>
+        </td>
+        <script>
+          document
+            .getElementById("loginButton")
+            .addEventListener("click", () => {
+              document.getElementById("hienthi").innerText =
+                "Bạn đã đăng ký thành công!";
+            });
+        </script>
+      </tr>
+    </table>
+  </body>
+</html>
