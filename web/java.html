@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tuyết Rơi Đẹp</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 50%, #4a90e2 100%);
+            min-height: 100vh;
+            font-family: 'Arial', sans-serif;
+            overflow-x: hidden;
+            position: relative;
+        }
+
+        .container {
+            position: relative;
+            z-index: 2;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            padding: 20px;
+            text-align: center;
+        }
+
+        .title {
+            color: white;
+            font-size: 3rem;
+            margin-bottom: 20px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+            animation: glow 2s ease-in-out infinite alternate;
+        }
+
+        .subtitle {
+            color: #e6f3ff;
+            font-size: 1.2rem;
+            margin-bottom: 40px;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.3);
+        }
+
+        @keyframes glow {
+            from {
+                text-shadow: 2px 2px 4px rgba(0,0,0,0.3), 0 0 10px rgba(255,255,255,0.3);
+            }
+            to {
+                text-shadow: 2px 2px 4px rgba(0,0,0,0.3), 0 0 20px rgba(255,255,255,0.6);
+            }
+        }
+
+        .snowflake {
+            position: fixed;
+            top: -10px;
+            color: white;
+            user-select: none;
+            pointer-events: none;
+            font-size: 1rem;
+            animation-name: fall;
+            animation-timing-function: linear;
+            animation-iteration-count: infinite;
+            z-index: 1;
+        }
+
+        @keyframes fall {
+            0% {
+                transform: translateY(-100vh) rotate(0deg);
+                opacity: 1;
+            }
+            100% {
+                transform: translateY(100vh) rotate(360deg);
+                opacity: 0.3;
+            }
+        }
+
+        .mountain {
+            position: absolute;
+            bottom: 0;
+            width: 100%;
+            height: 200px;
+            background: linear-gradient(45deg, #2c3e50, #34495e);
+            clip-path: polygon(0% 100%, 20% 60%, 40% 80%, 60% 40%, 80% 70%, 100% 50%, 100% 100%);
+            z-index: 1;
+        }
+
+        .tree {
+            position: absolute;
+            bottom: 150px;
+            width: 0;
+            height: 0;
+            border-left: 15px solid transparent;
+            border-right: 15px solid transparent;
+            border-bottom: 40px solid #27ae60;
+            z-index: 2;
+        }
+
+        .tree1 { left: 10%; }
+        .tree2 { left: 25%; transform: scale(1.2); }
+        .tree3 { right: 30%; transform: scale(0.8); }
+        .tree4 { right: 15%; }
+
+        .card {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 40px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            max-width: 500px;
+            margin: 20px;
+        }
+
+        .controls {
+            margin-top: 30px;
+        }
+
+        .btn {
+            background: rgba(255, 255, 255, 0.2);
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            color: white;
+            padding: 12px 24px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 1rem;
+            margin: 0 10px;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(5px);
+        }
+
+        .btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        @media (max-width: 768px) {
+            .title {
+                font-size: 2rem;
+            }
+            .card {
+                padding: 20px;
+                margin: 10px;
+            }
+            .btn {
+                display: block;
+                margin: 10px auto;
+                width: 200px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="mountain"></div>
+    <div class="tree tree1"></div>
+    <div class="tree tree2"></div>
+    <div class="tree tree3"></div>
+    <div class="tree tree4"></div>
+
+    <div class="container">
+        <div class="card">
+            <h1 class="title">❄️ Tuyết Rơi ❄️</h1>
+            <p class="subtitle">Cảm nhận không khí mùa đông tuyệt đẹp</p>
+            
+            <div class="controls">
+                <button class="btn" onclick="toggleSnow()">Bật/Tắt Tuyết</button>
+                <button class="btn" onclick="changeIntensity()">Thay Đổi Cường Độ</button>
+                <button class="btn" onclick="changeStyle()">Đổi Kiểu Tuyết</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let snowActive = true;
+        let snowIntensity = 1;
+        let currentStyle = 0;
+        const snowStyles = ['❄', '❅', '✻', '✧', '❇', '✦'];
+        
+        function createSnowflake() {
+            if (!snowActive) return;
+            
+            const snowflake = document.createElement('div');
+            snowflake.className = 'snowflake';
+            snowflake.innerHTML = snowStyles[currentStyle];
+            
+            // Vị trí ngẫu nhiên
+            snowflake.style.left = Math.random() * 100 + 'vw';
+            
+            // Kích thước ngẫu nhiên
+            const size = Math.random() * 0.8 + 0.5;
+            snowflake.style.fontSize = size + 'rem';
+            
+            // Thời gian rơi ngẫu nhiên
+            const duration = Math.random() * 3 + 5;
+            snowflake.style.animationDuration = duration + 's';
+            
+            // Độ mờ ngẫu nhiên
+            snowflake.style.opacity = Math.random() * 0.6 + 0.4;
+            
+            document.body.appendChild(snowflake);
+            
+            // Xóa snowflake sau khi animation kết thúc
+            setTimeout(() => {
+                if (snowflake.parentNode) {
+                    snowflake.parentNode.removeChild(snowflake);
+                }
+            }, duration * 1000);
+        }
+
+        function toggleSnow() {
+            snowActive = !snowActive;
+            if (!snowActive) {
+                // Xóa tất cả snowflakes hiện tại
+                const snowflakes = document.querySelectorAll('.snowflake');
+                snowflakes.forEach(flake => flake.remove());
+            }
+        }
+
+        function changeIntensity() {
+            snowIntensity = snowIntensity === 1 ? 2 : snowIntensity === 2 ? 0.5 : 1;
+        }
+
+        function changeStyle() {
+            currentStyle = (currentStyle + 1) % snowStyles.length;
+        }
+
+        // Tạo tuyết rơi liên tục
+        setInterval(() => {
+            for (let i = 0; i < snowIntensity * 3; i++) {
+                createSnowflake();
+            }
+        }, 200);
+
+        // Tạo tuyết ban đầu
+        for (let i = 0; i < 50; i++) {
+            setTimeout(() => createSnowflake(), i * 100);
+        }
+    </script>
+</body>
+</html>
