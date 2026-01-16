@@ -1,0 +1,571 @@
+#include <Arduino.h>
+#include <WiFi.h>
+#include <PubSubClient.h>
+#include <ArduinoJson.h>
+#include <HTTPClient.h>
+#include <Wire.h>
+#include <Adafruit_GFX.h>
+#include <Adafruit_SSD1306.h>
+
+// --- CẤU HÌNH OLED ---
+#define SCREEN_WIDTH 128
+#define SCREEN_HEIGHT 64
+#define OLED_RESET -1
+#define SCREEN_ADDRESS 0x3C
+Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RESET);
+
+// --- CẤU HÌNH WIFI ---
+const char* ssid = "ChouHome";
+const char* password = "chou150197";
+
+// --- MQTT BROKER ---
+const char* mqtt_server = "192.168.2.21";
+const int mqtt_port = 1883;
+const char* mqtt_user = "chieu";
+const char* mqtt_pass = "chieu";
+const char* topic_data = "irrigation/data";
+const char* topic_cmd = "irrigation/cmd";
+const char* topic_status = "irrigation/status";
+
+// --- CẤU HÌNH API ---
+const char* API_SERVER = "http://doam.x10.mx/api.php";
+const char* API_ENDPOINT_PENDING = "/pending-commands";
+const char* API_ENDPOINT_MARK = "/mark-executed";
+const char* API_ENDPOINT_CONFIG = "/config";
+
+// --- NGƯỠNG ĐO ẨM ---
+int userDryThreshold = 3000;
+const int CRITICAL_THRESHOLD = 3800;
+
+// --- CẤU HÌNH CHÂN GPIO ---
+const int SOIL_SENSOR_PIN = 34;
+const int BUTTON_PUMP_PIN = 14;
+const int BUTTON_AUTO_PIN = 27;
+const int RELAY_PIN = 26;
+const int LED_RED_PIN = 19;
+const int LED_GREEN_PIN = 23;      // ĐỔI TỪ 21 SANG 23
+const int LED_YELLOW_PIN = 18;
+const int BUZZER_PIN = 25;
+// OLED sử dụng GPIO 21 (SDA) và GPIO 22 (SCL) - mặc định I2C
+
+// --- BIẾN TOÀN CỤC ---
+WiFiClient espClient;
+PubSubClient client(espClient);
+
+unsigned long lastDataSendTime = 0;
+const long dataSendInterval = 2000;
+
+unsigned long lastCommandCheckTime = 0;
+const long commandCheckInterval = 3000;
+
+unsigned long lastOLEDUpdateTime = 0;
+const long oledUpdateInterval = 500;  // Cập nhật OLED mỗi 500ms
+
+bool isAutoMode = true;
+bool isPumpOn = false;
+String systemStatus = "ok";
+
+unsigned long lastBlinkTime = 0;
+const long blinkInterval = 500;
+bool ledBlinkState = false;
+
+unsigned long lastPumpButtonPressTime = 0;
+bool lastPumpButtonState = HIGH;
+const long debounceDelay = 50;
+
+unsigned long lastAutoButtonPressTime = 0;
+bool lastAutoButtonState = HIGH;
+
+unsigned long lastReconnectAttempt = 0;
+const long reconnectInterval = 5000;
+
+// --- PROTOTYPES ---
+void loadConfigFromWeb();
+bool reconnect();
+void checkPendingCommands();
+void markCommandExecuted(int cmdId);
+void executeCommand(String command);
+void sendControlLogToAPI(String command);
+void updateOLED();
+
+// --- CẬP NHẬT OLED ---
+void updateOLED() {
+    if (millis() - lastOLEDUpdateTime < oledUpdateInterval) return;
+    lastOLEDUpdateTime = millis();
+    
+    int moistureValue = analogRead(SOIL_SENSOR_PIN);
+    
+    display.clearDisplay();
+    display.setTextSize(2);
+    display.setTextColor(SSD1306_WHITE);
+    display.setCursor(0, 0);
+    display.println("DO AM DAT");
+    
+    display.setTextSize(3);
+    display.setCursor(10, 30);
+    display.print(moistureValue);
+    
+    display.display();
+}
+
+// --- GỬI LOG ĐIỀU KHIỂN LÊN API ---
+void sendControlLogToAPI(String command) {
+    if (WiFi.status() != WL_CONNECTED) return;
+    
+    HTTPClient http;
+    String url = String(API_SERVER) + "/control";
+    
+    http.begin(url);
+    http.addHeader("Content-Type", "application/json");
+    
+    StaticJsonDocument<128> doc;
+    doc["command"] = command;
+    
+    String jsonBody;
+    serializeJson(doc, jsonBody);
+    
+    int httpCode = http.POST(jsonBody);
+    
+    if (httpCode == HTTP_CODE_OK) {
+        Serial.printf("✓ Sent control log to API: %s\n", command.c_str());
+    }
+    
+    http.end();
+}
+
+// --- CALLBACK MQTT ---
+void callback(char* topic, byte* payload, unsigned int length) {
+    String msg;
+    for (int i = 0; i < length; i++) msg += (char)payload[i];
+    Serial.printf("MQTT Received [%s]: %s\n", topic, msg.c_str());
+    executeCommand(msg);
+}
+
+void executeCommand(String command) {
+    command.toUpperCase();
+    
+    if (command == "PUMP_ON") {
+        isAutoMode = false;
+        isPumpOn = true;
+        digitalWrite(RELAY_PIN, LOW);
+        Serial.println("✓ Executed: PUMP ON");
+    } 
+    else if (command == "PUMP_OFF") {
+        isAutoMode = false;
+        isPumpOn = false;
+        digitalWrite(RELAY_PIN, HIGH);
+        Serial.println("✓ Executed: PUMP OFF");
+    } 
+    else if (command == "AUTO_ON") {
+        isAutoMode = true;
+        Serial.println("✓ Executed: AUTO ON");
+    } 
+    else if (command == "AUTO_OFF") {
+        isAutoMode = false;
+        isPumpOn = false;
+        digitalWrite(RELAY_PIN, HIGH);
+        Serial.println("✓ Executed: AUTO OFF");
+    } 
+    else if (command == "RELOAD_CONFIG") {
+        Serial.println("✓ Executed: RELOAD CONFIG");
+        loadConfigFromWeb();
+    }
+}
+
+// --- KẾT NỐI MQTT ---
+bool reconnect() {
+    if (millis() - lastReconnectAttempt < reconnectInterval) {
+        return false;
+    }
+    lastReconnectAttempt = millis();
+    
+    Serial.print("Attempting MQTT connection...");
+    
+    String clientId = "ESP32Client-" + String(random(0xffff), HEX);
+    
+    if (client.connect(clientId.c_str(), mqtt_user, mqtt_pass)) {
+        Serial.println("connected");
+        client.subscribe(topic_cmd);
+        
+        StaticJsonDocument<100> doc;
+        doc["device"] = "ESP32";
+        doc["status"] = "online";
+        doc["ip"] = WiFi.localIP().toString();
+        char buffer[100];
+        serializeJson(doc, buffer);
+        client.publish(topic_status, buffer, true);
+        
+        return true;
+    } else {
+        Serial.print("failed, rc=");
+        Serial.println(client.state());
+        return false;
+    }
+}
+
+// --- KIỂM TRA LỆNH PENDING TỪ API ---
+void checkPendingCommands() {
+    if (millis() - lastCommandCheckTime < commandCheckInterval) return;
+    lastCommandCheckTime = millis();
+    
+    if (WiFi.status() != WL_CONNECTED) return;
+    
+    HTTPClient http;
+    String url = String(API_SERVER) + String(API_ENDPOINT_PENDING);
+    
+    http.begin(url);
+    http.setTimeout(5000);
+    int httpCode = http.GET();
+    
+    if (httpCode == HTTP_CODE_OK) {
+        String payload = http.getString();
+        
+        StaticJsonDocument<2048> doc;
+        DeserializationError error = deserializeJson(doc, payload);
+        
+        if (!error && doc["success"] == true) {
+            JsonArray commands = doc["data"].as<JsonArray>();
+            
+            if (commands.size() > 0) {
+                Serial.printf("Found %d pending commands\n", commands.size());
+                
+                for (JsonObject cmd : commands) {
+                    int cmdId = cmd["id"];
+                    String command = cmd["command"].as<String>();
+                    
+                    Serial.printf("Executing from API: %s (ID: %d)\n", command.c_str(), cmdId);
+                    executeCommand(command);
+                    markCommandExecuted(cmdId);
+                }
+            }
+        }
+    }
+    
+    http.end();
+}
+
+// --- ĐÁNH DẤU LỆNH ĐÃ THỰC THI ---
+void markCommandExecuted(int cmdId) {
+    HTTPClient http;
+    String url = String(API_SERVER) + String(API_ENDPOINT_MARK);
+    
+    http.begin(url);
+    http.addHeader("Content-Type", "application/json");
+    
+    StaticJsonDocument<64> doc;
+    doc["id"] = cmdId;
+    
+    String jsonBody;
+    serializeJson(doc, jsonBody);
+    
+    int httpCode = http.POST(jsonBody);
+    
+    if (httpCode == HTTP_CODE_OK) {
+        Serial.printf("✓ Marked command %d as executed\n", cmdId);
+    }
+    
+    http.end();
+}
+
+// --- TẢI CẤU HÌNH TỪ WEB ---
+void loadConfigFromWeb() {
+    if (WiFi.status() == WL_CONNECTED) {
+        HTTPClient http;
+        String configUrl = String(API_SERVER) + String(API_ENDPOINT_CONFIG);
+        
+        Serial.print("Loading config from: ");
+        Serial.println(configUrl);
+        
+        http.begin(configUrl);
+        http.setTimeout(5000);
+        int httpCode = http.GET();
+        
+        if (httpCode == HTTP_CODE_OK) {
+            String payload = http.getString();
+            StaticJsonDocument<512> doc;
+            DeserializationError error = deserializeJson(doc, payload);
+            
+            if (!error && doc["success"] == true) {
+                if (doc["data"].containsKey("manual_threshold")) {
+                    int newThreshold = doc["data"]["manual_threshold"];
+                    if (newThreshold >= 0 && newThreshold <= 4095) {
+                        userDryThreshold = newThreshold;
+                        Serial.printf("✓ Threshold updated: %d\n", userDryThreshold);
+                    }
+                }
+            }
+        }
+        http.end();
+    }
+}
+
+// --- CẬP NHẬT STATUS ---
+void updateSystemStatus() {
+    int moistureValue = analogRead(SOIL_SENSOR_PIN);
+    
+    if (!isAutoMode) {
+        systemStatus = "manual";
+        return;
+    }
+    
+    if (moistureValue > CRITICAL_THRESHOLD) {
+        systemStatus = "critical";
+    } else if (moistureValue > userDryThreshold) {
+        systemStatus = "watering";
+    } else {
+        systemStatus = "ok";
+    }
+}
+
+// --- CẬP NHẬT LED & BUZZER ---
+void updateIndicators() {
+    isPumpOn = (digitalRead(RELAY_PIN) == LOW);
+    
+    digitalWrite(LED_RED_PIN, LOW);
+    digitalWrite(LED_YELLOW_PIN, LOW);
+    digitalWrite(LED_GREEN_PIN, LOW);
+    digitalWrite(BUZZER_PIN, LOW);
+    
+    if (!isAutoMode) {
+        if (isPumpOn) {
+            digitalWrite(LED_RED_PIN, HIGH);
+        } else {
+            digitalWrite(LED_GREEN_PIN, HIGH);
+        }
+        return;
+    }
+    
+    digitalWrite(LED_YELLOW_PIN, HIGH);
+
+    if (systemStatus == "critical") {
+        if (millis() - lastBlinkTime > blinkInterval) {
+            ledBlinkState = !ledBlinkState;
+            digitalWrite(LED_RED_PIN, ledBlinkState);
+            digitalWrite(LED_YELLOW_PIN, ledBlinkState);
+            digitalWrite(BUZZER_PIN, ledBlinkState);
+            lastBlinkTime = millis();
+        }
+    } else if (systemStatus == "watering") {
+        // Đèn vàng đã bật ở trên
+    } else {
+        digitalWrite(LED_GREEN_PIN, HIGH);
+    }
+}
+
+// --- XỬ LÝ NÚT 1: BẬT/TẮT MÁY BƠM ---
+void handlePumpButton() {
+    bool currentState = digitalRead(BUTTON_PUMP_PIN);
+    
+    if (lastPumpButtonState == HIGH && currentState == LOW) {
+        lastPumpButtonPressTime = millis();
+    }
+    
+    if (lastPumpButtonState == LOW && currentState == HIGH) {
+        if (millis() - lastPumpButtonPressTime > debounceDelay) {
+            Serial.println("🔘 Physical Button 1 Pressed: TOGGLE PUMP");
+            
+            isAutoMode = false;
+            isPumpOn = !isPumpOn;
+            digitalWrite(RELAY_PIN, isPumpOn ? LOW : HIGH);
+            
+            Serial.printf("Pump: %s (Auto Mode: OFF)\n", isPumpOn ? "ON" : "OFF");
+            
+            String command = isPumpOn ? "PUMP_ON" : "PUMP_OFF";
+            sendControlLogToAPI(command);
+            
+            if (client.connected()) {
+                client.publish(topic_cmd, command.c_str());
+            }
+        }
+    }
+    
+    lastPumpButtonState = currentState;
+}
+
+// --- XỬ LÝ NÚT 2: BẬT/TẮT CHẾ ĐỘ TỰ ĐỘNG ---
+void handleAutoButton() {
+    bool currentState = digitalRead(BUTTON_AUTO_PIN);
+    
+    if (lastAutoButtonState == HIGH && currentState == LOW) {
+        lastAutoButtonPressTime = millis();
+    }
+    
+    if (lastAutoButtonState == LOW && currentState == HIGH) {
+        if (millis() - lastAutoButtonPressTime > debounceDelay) {
+            Serial.println("🔘 Physical Button 2 Pressed: TOGGLE AUTO MODE");
+            
+            isAutoMode = !isAutoMode;
+            
+            Serial.printf("Auto Mode: %s\n", isAutoMode ? "ON" : "OFF");
+            
+            if (!isAutoMode) {
+                isPumpOn = false;
+                digitalWrite(RELAY_PIN, HIGH);
+            }
+            
+            String command = isAutoMode ? "AUTO_ON" : "AUTO_OFF";
+            sendControlLogToAPI(command);
+            
+            if (client.connected()) {
+                client.publish(topic_cmd, command.c_str());
+            }
+        }
+    }
+    
+    lastAutoButtonState = currentState;
+}
+
+// --- LOGIC AUTO MODE ---
+void handleAutoMode() {
+    if (!isAutoMode) return;
+    
+    int moistureValue = analogRead(SOIL_SENSOR_PIN);
+    if (moistureValue > userDryThreshold) {
+        if (!isPumpOn) {
+            digitalWrite(RELAY_PIN, LOW);
+            isPumpOn = true;
+            Serial.println("Auto: PUMP ON");
+        }
+    } else {
+        if (isPumpOn) {
+            digitalWrite(RELAY_PIN, HIGH);
+            isPumpOn = false;
+            Serial.println("Auto: PUMP OFF");
+        }
+    }
+}
+
+// --- GỬI DỮ LIỆU MQTT ---
+void sendMQTTData() {
+    if (millis() - lastDataSendTime < dataSendInterval) return;
+    
+    int moistureValue = analogRead(SOIL_SENSOR_PIN);
+    isPumpOn = (digitalRead(RELAY_PIN) == LOW);
+    
+    StaticJsonDocument<200> jsonDoc;
+    jsonDoc["moisture"] = moistureValue;
+    jsonDoc["status"] = systemStatus;
+    jsonDoc["autoMode"] = isAutoMode;
+    jsonDoc["pumpOn"] = isPumpOn;
+    jsonDoc["timestamp"] = millis();
+    
+    char buffer[200];
+    serializeJson(jsonDoc, buffer);
+    
+    if (client.connected()) {
+        client.publish(topic_data, buffer);
+        Serial.printf("✓ MQTT: %s\n", buffer);
+    }
+    
+    lastDataSendTime = millis();
+}
+
+// --- SETUP ---
+void setup() {
+    Serial.begin(115200);
+    Serial.println("\n\n=== ESP32 Irrigation System with OLED ===");
+    
+    // Khởi tạo I2C cho OLED
+    Wire.begin(21, 22);  // SDA = GPIO 21, SCL = GPIO 22
+    
+    // Khởi tạo OLED
+    if(!display.begin(SSD1306_SWITCHCAPVCC, SCREEN_ADDRESS)) {
+        Serial.println(F("OLED initialization failed!"));
+        for(;;);
+    }
+    
+    display.clearDisplay();
+    display.setTextSize(1);
+    display.setTextColor(SSD1306_WHITE);
+    display.setCursor(0, 0);
+    display.println("System Starting...");
+    display.display();
+    delay(1000);
+    
+    pinMode(SOIL_SENSOR_PIN, INPUT);
+    pinMode(BUTTON_PUMP_PIN, INPUT_PULLUP);
+    pinMode(BUTTON_AUTO_PIN, INPUT_PULLUP);
+    pinMode(RELAY_PIN, OUTPUT);
+    pinMode(LED_RED_PIN, OUTPUT);
+    pinMode(LED_GREEN_PIN, OUTPUT);
+    pinMode(LED_YELLOW_PIN, OUTPUT);
+    pinMode(BUZZER_PIN, OUTPUT);
+
+    digitalWrite(RELAY_PIN, HIGH);
+    digitalWrite(LED_RED_PIN, LOW);
+    digitalWrite(LED_YELLOW_PIN, LOW);
+    digitalWrite(LED_GREEN_PIN, HIGH);
+    digitalWrite(BUZZER_PIN, LOW);
+
+    WiFi.mode(WIFI_STA);
+    WiFi.begin(ssid, password);
+    Serial.print("Connecting to WiFi");
+    
+    display.clearDisplay();
+    display.setCursor(0, 0);
+    display.println("Connecting WiFi...");
+    display.display();
+    
+    int wifiAttempts = 0;
+    while (WiFi.status() != WL_CONNECTED && wifiAttempts < 20) {
+        delay(500);
+        Serial.print(".");
+        wifiAttempts++;
+    }
+    
+    if (WiFi.status() == WL_CONNECTED) {
+        Serial.println("\n✓ WiFi Connected!");
+        Serial.print("IP Address: ");
+        Serial.println(WiFi.localIP());
+        
+        display.clearDisplay();
+        display.setCursor(0, 0);
+        display.println("WiFi Connected!");
+        display.println(WiFi.localIP());
+        display.display();
+        delay(2000);
+        
+        loadConfigFromWeb();
+    } else {
+        Serial.println("\n✗ WiFi Failed! Restarting...");
+        display.clearDisplay();
+        display.setCursor(0, 0);
+        display.println("WiFi Failed!");
+        display.display();
+        delay(2000);
+        ESP.restart();
+    }
+
+    client.setServer(mqtt_server, mqtt_port);
+    client.setCallback(callback);
+    client.setKeepAlive(60);
+    
+    reconnect();
+    
+    Serial.println("System Ready!");
+    Serial.println("Button 1 (D14): Toggle Pump");
+    Serial.println("Button 2 (D27): Toggle Auto Mode\n");
+    
+    display.clearDisplay();
+    display.setCursor(0, 0);
+    display.println("System Ready!");
+    display.display();
+    delay(1000);
+}
+
+// --- LOOP ---
+void loop() {
+    if (!client.connected()) {
+        reconnect();
+    }
+    client.loop();
+
+    handlePumpButton();
+    handleAutoButton();
+    handleAutoMode();
+    updateSystemStatus();
+    updateIndicators();
+    updateOLED();        // Cập nhật màn hình OLED
+    sendMQTTData();
+    checkPendingCommands();
+}
